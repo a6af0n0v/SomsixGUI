@@ -1,0 +1,108 @@
+QWidget
+{
+    background: white;
+}
+
+QPushButton {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #CADBCE;
+    background: #EBF6F1;
+    color: #00A859;
+    font: 14px bold;
+}
+QPushButton#disabled{
+    background: #FCFCFC;
+}
+QPushButton:hover{
+    background: #C7F5E0;
+    border-width: 2px;
+}
+
+QPushButton#closed
+{
+    background: #FF0000;
+}
+QPushButton#open
+{
+    background: #aBF6a1;
+}
+QPushButton#error
+{
+    background: #FFC2A1;
+}
+
+QSpinBox{
+    padding: 10px;
+    margin: 5px;
+    border-radius: 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #CADBCE;
+    background: #ffffff;
+    color: #00A859;
+    font: 10px bold;
+}
+QSpinBox::up-button{
+    width: 16px;
+    border: 0px solid;
+
+}
+QSpinBox::down-button{
+    width: 16px;
+    border: 0px solid;
+}
+
+QSpinBox::down-arrow{
+    image: url(icons/spinbox_down.png);
+}
+QSpinBox::up-arrow{
+    image: url(icons/spinbox_up.png);
+}
+
+QLabel
+{
+    padding: 10px;
+    margin: 5px;
+    color: #00A859;
+    font: 10px bold;
+}
+
+QPushButton::menu-indicator{
+       image: url(icons/menu_indicator_hover.png);
+       width: 10px;
+       height: 10px;
+       subcontrol-origin: padding;
+       subcontrol-position: center right;
+       right: 10px;
+}
+
+QMenu{
+    background: #EBF6F1;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #8ECB8D;
+}
+
+QMenu::item
+{
+    color: #00A859;
+}
+
+QMenu::item:selected
+{
+    background: #C7F5E0;
+}
+
+QChartView {
+    background: blue;
+
+}
+QChart
+{
+    background: red;
+}
