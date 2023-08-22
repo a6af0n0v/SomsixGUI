@@ -26,6 +26,9 @@ class STATUS(Enum):
 
 class ChartWidget(QWidget):
     def append(self, value):
+        is_first_point = (len(self.line.points()) == 0)
+        if is_first_point:
+            MainWidget.start_time = time.time()
         time_elapsed = time.time() - MainWidget.start_time
         value_uA = value*1E6
         self.line.append(time_elapsed, value_uA)
@@ -42,10 +45,10 @@ class ChartWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.min_value = -40
-        self.max_value = -35
+        self.min_value = -0
+        self.max_value = -5
         self.t_min_value = 0
-        self.t_max_value = 60
+        self.t_max_value = 180
         self.chart = QChart()
         self.chartview = QChartView(self.chart)
         self.chart.setTheme(6)
@@ -74,6 +77,7 @@ class ChartWidget(QWidget):
         if Styles.chart_styles["legend_visible"]==False:
             self.chart.legend().hide()
         self.line = QLineSeries()
+        self.line.setPointsVisible(Styles.chart_styles["set_points_visible"])
         self.line.setName("5um")
         # Customize series
         pen = QPen(QColor(Styles.chart_styles["series_line_color"]))
@@ -98,7 +102,7 @@ class ChartWidget(QWidget):
         self.chart.axisX().setLabelFormat("%.0f")
 
         self.chart.axisX().setRange(self.t_min_value,self.t_max_value)
-        self.chart.axisY().setLabelFormat("%.0f")
+        self.chart.axisY().setLabelFormat("%.3f")
         self.chart.axisY().setRange(self.min_value,self.max_value)
         # Grid lines and shades
         self.chart.axisX().setGridLineVisible(True)
@@ -140,9 +144,10 @@ class MainWidget (QWidget):
                     if pkg.value_valid == True:
                         self.WE_currents.append(pkg.value)
                 if line == b'\n':
-                    avg = sum(self.WE_currents)/len(self.WE_currents)
-                    print(f"Method script finished, average value {avg}")
-                    self.cw_charts.append(avg)
+                    if (len(self.WE_currents)!=0):
+                        avg = sum(self.WE_currents)/len(self.WE_currents)
+                        print(f"Method script finished, average value {avg}")
+                        self.cw_charts.append(avg)
                     self.timer.stop()
 
     def start_clicked(self):
@@ -156,16 +161,15 @@ class MainWidget (QWidget):
         return self._status
     @status.setter
     def status (self, value):
-
         if value == STATUS.NOT_CONNECTED:
             self.pb_start.setEnabled(False)
-            self.pb_save.setEnabled(False)
+            #self.pb_save.setEnabled(False)
             self.cbb_receipe_selector.setEnabled(True)
             self.cbb_receipe_selector.setObjectName("")
             self.pb_settings.setEnabled(True)
             self.pb_settings.setObjectName("")
             self.pb_start.setObjectName("disabled")
-            self.pb_save.setObjectName("disabled")
+            #self.pb_save.setObjectName("disabled")
         elif value == STATUS.STOPPED:
             self.pb_start.setEnabled(True)
             self.pb_start.setObjectName("")
@@ -202,6 +206,9 @@ class MainWidget (QWidget):
     def on_settings_clicked(self):
         self.settings_dlg.exec()
 
+    def on_save_clicked(self):
+        self.interpreter.save()
+
     def receipe_changed(self):
         import os
         path = os.path.basename(self.cbb_receipe_selector.receipe)
@@ -229,6 +236,7 @@ class MainWidget (QWidget):
         self.pb_start = QPushButton("Start")
         self.pb_start.clicked.connect(self.start_clicked)
         self.pb_save = QPushButton("Save")
+        self.pb_save.clicked.connect(self.on_save_clicked)
         self.pb_settings = QPushButton("Settings")
         self.pb_settings.clicked.connect(self.on_settings_clicked)
         toolbar_layout.addWidget(self.cbb_port_selector)
