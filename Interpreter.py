@@ -1,6 +1,40 @@
-current_range = ["100nA", "1.95uA", "3.91uA", "7.81uA", "15.63uA",
-                 "31.25uA", "62.5uA", "125uA", "250uA", "500uA", "1mA",
-                 "5mA"]
+#current_range = ["100nA", "1.95uA", "3.91uA", "7.81uA", "15.63uA",
+#                 "31.25uA", "62.5uA", "125uA", "250uA", "500uA", "1mA",
+#                 "5mA"]
+import time
+
+from PyQt5.QtWidgets import QFileDialog
+column_names = ["Time", "Type", "Value", "Units", "Type", "Value", "Units",
+                "MetaID", "Status", "I_Range",
+                "MetaID", "Status", "I_Range"]
+separator = ","
+current_range = {
+    0x0: "100nA",
+    0x1: "1.9uA",
+    0x2: "3.91uA",
+    0x3: "7.81uA",
+    0x4: "15.63uA",
+    0x5: "31.25uA",
+    0x6: "62.5uA",
+    0x7: "125uA",
+    0x8: "250uA",
+    0x9: "500uA",
+    0xA: "1mA",
+    0xB: "5mA",
+    0x80: "100nA",
+    0x81: "1uA",
+    0x82: "6.25uA",
+    0x83: "12.5uA",
+    0x84: "25uA",
+    0x85: "50uA",
+    0x86: "100uA",
+    0x87: "200uA",
+    0x88: "1mA",
+    0x89: "5mA",
+
+}
+
+
 measurement_status = {
     "0":"OK",
     "1":"timing not met",
@@ -44,8 +78,16 @@ class Meta:
         if self.id == 1:
             result = f"{measurement_id_types[self.id]}: {measurement_status[self.status]}"
         elif self.id == 2:
-            result = f"{measurement_id_types[self.id]} current_range: {current_range[self.current_range]}"
+            current_range_txt = ""
+            try:
+                current_range_txt = current_range[self.current_range]
+            except:
+                pass
+            result = f"{measurement_id_types[self.id]} current_range: {current_range_txt}"
         return  result
+    def to_csv(self):
+        csv = f"{measurement_id_types[self.id]}{separator}{self.status}{separator}{self.current_range}{separator}"
+        return  csv
 
 class Varialble:
     def __init__(self):
@@ -58,6 +100,12 @@ class Varialble:
         for meta in self.metas:
             result = result + ", " + str(meta)
         return result
+    def to_csv(self):
+        csv = f"{measurement_types[self.type]}{separator}{self.value}{separator}{self.value_prefix}{separator}"
+        if len(self.metas):
+            for meta in self.metas:
+                csv = csv + meta.to_csv()
+        return csv
 
 class Package:
     @property
@@ -76,16 +124,43 @@ class Package:
         return 0
     def __init__(self):
         self.variables = []
+        self.time = time.time()
     def __str__(self):
         result = ""
         for variable in self.variables:
             result = result + str(variable) + "; "
         return result
 
+    def to_csv(self):
+        csv = f"{self.time}{separator}"
+        for variable in self.variables:
+            csv = csv +variable.to_csv()
+        return  csv
+
 
 class Interpreter:
-    def init(self):
+    MAX_READINGS = 100000
+    def __init__(self):
         self.readings = []
+    def csv_table_headers(self):
+        return separator.join(column_names) + "\n"
+
+    def save(self):
+        file_name = QFileDialog.getSaveFileName(None, "Save readings to ...", "/", "*.csv")
+        if file_name[0] != "":
+            try:
+                with open(file_name[0], "w+") as f:
+                    f.write(self.csv_table_headers())
+                    for reading in self.readings:
+                        f.write(reading.to_csv())
+                        f.write("\n")
+            except Exception as ex:
+                print(ex)
+
+    def add_reading(self, reading: Package):
+        self.readings.append(reading)
+        if len(self.readings)>=Interpreter.MAX_READINGS:
+            self.readings.pop()
 
     def interpret(self, response: str):
         package = None
@@ -121,4 +196,5 @@ class Interpreter:
                     except Exception as ex:
                         print(f"Conversion failed {var}")
                 package.variables.append(variable)
+                self.add_reading(package)
         return package
