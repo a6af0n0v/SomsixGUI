@@ -42,6 +42,7 @@ class ReceipeSelector(QPushButton):
     @property
     def receipe(self):
         return self._receipe
+
     @property
     def method_script(self):
         return self._method_script
@@ -64,7 +65,7 @@ class ReceipeSelector(QPushButton):
             self._method_script = self.load_method_script_from_file(__receipe[1])
         self.setText(self.shorten_receipe_name(__receipe[0]))
         self._receipe = __receipe[0]
-
+        self._full_receipe_name = __receipe[1]
         self.on_receipe_changed.emit()
 
     def shorten_receipe_name(self, name):
@@ -76,6 +77,7 @@ class ReceipeSelector(QPushButton):
         super().__init__(parent)
         menu = QMenu()
         self._receipe = "Default"
+        self._full_receipe_name = "Default"
         self._method_script = default_method_script
         def build_action_triggered(receipe):
             def action():
@@ -85,12 +87,12 @@ class ReceipeSelector(QPushButton):
         for file in all_files_in_scripts_dir:
             split_file_name = file.split(".")
             if len(split_file_name) > 1:
-                if split_file_name[1] == "methodscript":
+                if split_file_name[-1] == "methodscript":
                     short = self.shorten_receipe_name(file)
                     recepies_in_folder.append((short, "scripts/" + file))
-        print(recepies_in_folder)
+        #print(recepies_in_folder)
         for receipe_short, receipe_full in recepies_in_folder:
-            print(receipe_short)
+            #print(receipe_short)
             action: QAction = menu.addAction(receipe_short)
             action.triggered.connect(build_action_triggered((receipe_short,receipe_full)))
         action = menu.addAction("Default")

@@ -109,3 +109,44 @@ QChart
 {
     background: red;
 }
+
+QScrollBar {
+    border: 0px solid grey;
+    background: #373435;
+    height: 15px;
+    margin: 0px 20px 0px 20px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #373435;
+}
+QScrollBar::add-line {
+    border: 2px solid grey;
+    background: 373435 ;
+    width: 20px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    border: 2px solid grey;
+    background: #373435;
+    width: 20px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::left-arrow{
+    border: 0px solid grey;
+    width: 3px;
+    height: 3px;
+    background: grey;
+}
+
+QScrollBar::right-arrow
+{
+    border: 0px solid grey;
+    width: 3px;
+    height: 3px;
+    background: grey;
+}

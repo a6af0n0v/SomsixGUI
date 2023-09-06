@@ -4,6 +4,7 @@ style = ""
 #theme = "green.qss"
 theme = "grey.qss"
 
+
 green_chart_styles = {
     "title_font_size": 18,
     "title_bold": True,
@@ -24,7 +25,7 @@ green_chart_styles = {
     "grid_shade_color": 0xeeffee,
     "grid_shades_visible": True,
     "grid_line_visible": True,
-
+    "set_points_visible": True,
     "axis_title_font_size": 14,
     "axis_title_italic": True,
     "axis_title_bold": True,
@@ -55,7 +56,7 @@ grey_chart_styles = {
     "axis_title_italic": True,
     "axis_title_bold": True,
     "axis_title_color": 0x848688,
-
+    "set_points_visible": True,
 }
 
 #chart_styles = green_chart_styles

@@ -34,7 +34,7 @@ class SettingsDialog(QDialog):
         layout = QFormLayout()
 
         self.sb_polling_interval = QSpinBox()
-        self.sb_polling_interval.setMinimum(10)
+        self.sb_polling_interval.setMinimum(1)
         self.sb_polling_interval.setValue(self.settings["polling_interval"])
         self.sb_polling_interval.setMaximum(1000000)
         layout.addRow("Polling interval, s", self.sb_polling_interval)
