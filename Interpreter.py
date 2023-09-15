@@ -4,9 +4,9 @@
 import time
 
 from PyQt5.QtWidgets import QFileDialog
-column_names = ["Time", "Type", "Value", "Units", "Type", "Value", "Units",
+column_names = ["Time", "Type", "Value", "Units", "Type2", "Value2", "Units2",
                 "MetaID", "Status", "I_Range",
-                "MetaID", "Status", "I_Range"]
+                "MetaID2", "Status2", "I_Range2,"]
 separator = ","
 current_range = {
     0x0: "100nA",
