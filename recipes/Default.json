@@ -1,0 +1,15 @@
+{
+    "name": "Default",
+    "methodscript1_file": "C:/Users/agafonov/PycharmProjects/GUI_Somsix/scripts/-1.6V_channel0.methodscript",
+    "methodscript1_enabled": true,
+    "methodscript2_file": "C:/Users/agafonov/PycharmProjects/GUI_Somsix/scripts/-1.6V_channel0.methodscript",
+    "methodscript2_enabled": true,
+    "polling_interval": 10,
+    "output_raw_current": "Current",
+    "number_of_points_to_average": 3,
+    "save_csv_while_measuring": "Yes",
+    "max_points_to_keep_in_memory": 100000,
+    "calibration": "",
+    "csv_file_name": "temp",
+    "max_points_in_chapter": 1000
+}
