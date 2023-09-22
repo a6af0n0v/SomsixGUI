@@ -1,9 +1,10 @@
 e
 var c
 var p
-set_pgstat_chan 0
-set_pgstat_mode 0
+var t
 set_pgstat_chan 1
+set_pgstat_mode 0
+set_pgstat_chan 0
 set_pgstat_mode 3
 set_max_bandwidth 1333333m
 set_range_minmax da -1600m -1600m
@@ -11,11 +12,14 @@ set_range ba 59n
 set_autoranging ba 59n 59n
 set_e -1200m
 cell_on
+store_var t 0 eb
 meas_loop_ca p c -1600m 3m 123m
 pck_start
+pck_add t
 pck_add p
 pck_add c
 pck_end
+add_var t 3m
 endloop
 on_finished:
 cell_off
