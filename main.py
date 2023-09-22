@@ -2,7 +2,7 @@ from enum import Enum
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFont, QBrush, QColor, QPen, QPainter
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QDialog
 
 from SettingsDialog import SettingsDialog
 from PortSelector import PortSelector, PORT_STATE
@@ -12,11 +12,8 @@ import Styles
 from PyQt5.QtChart import QLineSeries, QChart, QChartView
 from Interpreter import Interpreter
 
-main_wnd_size = (600, 400)
+main_wnd_size = (800, 600)
 main_wnd_title = "Somsix GUI"
-dummy_values = [(0, -27), (50, -45), (100, -35), (150, -31.66), (200, -30),
-                (250, -29), (300, -28.33), (350, -27.85), (400, -27.5), (450, -27.22),
-                (500, -27), (550, -26.82), (600, -26.667)]
 
 
 class STATUS(Enum):
@@ -24,15 +21,17 @@ class STATUS(Enum):
     RUNNING = 1
     NOT_CONNECTED = 2
 
-
 class ChartWidget(QWidget):
-    def append(self, value):
-        is_first_point = (len(self.line.points()) == 0)
+    def append(self, value, channel):
+        is_first_point = (len(self.line.points()) == 0) and (len(self.line2.points())==0)
         if is_first_point:
             MainWidget.start_time = time.time()
         time_elapsed = time.time() - MainWidget.start_time
         value_uA = value * 1E6
-        self.line.append(time_elapsed, value_uA)
+        if channel==0:
+            self.line.append(time_elapsed, value_uA)
+        elif channel==1:
+            self.line2.append(time_elapsed, value_uA)
         b_range_changed = False
         if value_uA < self.min_value:
             self.min_value = value_uA
@@ -78,14 +77,21 @@ class ChartWidget(QWidget):
         if Styles.chart_styles["legend_visible"] == False:
             self.chart.legend().hide()
         self.line = QLineSeries()
+        self.line2 = QLineSeries()
         self.line.setPointsVisible(Styles.chart_styles["set_points_visible"])
-        self.line.setName("5um")
+        self.line2.setPointsVisible(Styles.chart_styles["set_points_visible"])
+        self.line.setName("ch0")
+        self.line2.setName("ch1")
         # Customize series
         pen = QPen(QColor(Styles.chart_styles["series_line_color"]))
         pen.setWidth(Styles.chart_styles["series_line_width"])
+        pen2 = QPen(QColor(Styles.chart_styles["series_line2_color"]))
+        pen2.setWidth(Styles.chart_styles["series_line2_width"])
         self.line.setPen(pen)
+        self.line2.setPen(pen2)
 
         self.chart.addSeries(self.line)
+        self.chart.addSeries(self.line2)
         self.chart.createDefaultAxes()
 
         # Axis colors
@@ -143,17 +149,28 @@ class MainWidget(QWidget):
         if self.cbb_port_selector.palmsens_handle != None:
             while self.cbb_port_selector.palmsens_handle.in_waiting > 0:
                 line = self.cbb_port_selector.palmsens_handle.readline()
-                pkg = self.interpreter.interpret(line.decode())
+                pkg = self.interpreter.interpret(line.decode(), self.channel)
                 if pkg:
-                    print(pkg)
+                    #print(pkg)
                     if pkg.value_valid == True:
                         self.WE_currents.append(pkg.value)
+                    if self.cbb_receipe_selector.receipe["save_csv_while_measuring"]=="Yes":
+                        try:
+                            self.interpreter.save_temp(pkg, self.cbb_receipe_selector.receipe["max_points_in_chapter"])
+                        except Exception as ex:
+                            print(ex)
                 if line == b'\n':
                     if len(self.WE_currents) != 0:
-                        avg = sum(self.WE_currents[:-3]) / len(self.WE_currents[:-3])
-                        print(f"Method script finished, average value {avg}")
-                        self.cw_charts.append(avg)
-                    self.timer.stop()
+                        avg = sum(self.WE_currents[-self.cbb_receipe_selector.receipe["number_of_points_to_average"]:]) / len(self.WE_currents[-self.cbb_receipe_selector.receipe["number_of_points_to_average"]:])
+                        print(f"Method script for channel {self.channel} finished, average value {avg}, number of points: {self.cbb_receipe_selector.receipe['number_of_points_to_average']}")
+
+                        self.cw_charts.append(avg, self.channel)
+                        self.channel +=1
+                        if self.channel > 1 or self.cbb_receipe_selector.receipe["methodscript2_enabled"]==False:
+                            self.timer.stop()
+                            #print("Timer stopped")
+                        else:
+                            self.read_channel(self.channel)
 
     def start_clicked(self):
         if self.status == STATUS.STOPPED:
@@ -193,38 +210,48 @@ class MainWidget(QWidget):
             self.pb_settings.setObjectName("disabled")
             self.cbb_receipe_selector.setObjectName("disabled")
             self.pb_start.setText("Stop")
-            self.main_timer.start(self.settings_dlg.settings["polling_interval"] * 1000)
+            self.main_timer.start(self.cbb_receipe_selector.receipe["polling_interval"]*1000)
             self._status = STATUS.RUNNING
         self.setStyleSheet(Styles.style)
+
+    def read_channel(self, channel):
+        if channel==0 and self.cbb_receipe_selector.receipe["methodscript1_enabled"] == True:
+            self.channel = 0
+            for line in self.cbb_receipe_selector.methodscript1:
+                self.cbb_port_selector.palmsens_handle.write(line.encode() + b"\x0a")
+        else:
+            self.channel = 1
+            if self.cbb_receipe_selector.receipe["methodscript2_enabled"] == True:
+                for line in self.cbb_receipe_selector.methodscript2:
+                    self.cbb_port_selector.palmsens_handle.write(line.encode() + b"\x0a")
 
     def on_timeout(self):
         print(f"Flushing input buffer of port {self.cbb_port_selector.palmsens_handle.name}")
         self.WE_currents = []
-        self.timer.start(200)
         self.cbb_port_selector.palmsens_handle.flush()
-        for line in self.cbb_receipe_selector.method_script:
-            self.cbb_port_selector.palmsens_handle.write(line.encode() + b"\x0a")
+        self.read_channel(0)
+        self.timer.start(200)
 
     def on_port_changed(self):
         if self.cbb_port_selector.state == PORT_STATE.PORT_OPEN:  # port open
             self.status = STATUS.STOPPED
 
     def on_settings_clicked(self):
-        self.settings_dlg.exec()
+        self.settings_dlg = SettingsDialog(self, self.cbb_receipe_selector._full_receipe_name)
+        if self.settings_dlg.exec() == QDialog.Accepted:
+            self.cbb_receipe_selector.refresh()
 
     def on_save_clicked(self):
         self.interpreter.save()
 
     def receipe_changed(self):
-        import os
-        path = os.path.basename(self.cbb_receipe_selector._full_receipe_name)
-        tail = os.path.split(path)[1]
-
-        self.cw_charts.chart.setTitle(tail.rstrip(".methodscript"))
+        self.cw_charts.chart.setTitle(self.cbb_receipe_selector.receipe["name"])
+        self.interpreter.MAX_READINGS = self.cbb_receipe_selector.receipe["max_points_to_keep_in_memory"]
 
     def __init__(self, parent):
         super().__init__(parent)
         self._status = None
+        self.channel = -1
         self.main_timer = QTimer()
         self.main_timer.timeout.connect(self.on_timeout)
         layout = QVBoxLayout()
@@ -255,7 +282,7 @@ class MainWidget(QWidget):
         layout.addWidget(self.cw_charts)
         self.setLayout(layout)
         self.status = STATUS.NOT_CONNECTED
-        self.settings_dlg = SettingsDialog(self)
+
 
 
 if __name__ == "__main__":

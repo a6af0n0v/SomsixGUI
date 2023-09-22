@@ -150,3 +150,35 @@ QScrollBar::right-arrow
     height: 3px;
     background: grey;
 }
+QLineEdit{
+    padding: 10px;
+    margin: 5px;
+    border-radius: 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #CADBCE;
+    background: #E6E7E8;
+    color: #373435;
+    font: 12px bold;
+}
+QComboBox{
+    padding: 10px;
+    margin: 5px;
+    border-radius: 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #CADBCE;
+    background: #E6E7E8;
+    color: #373435;
+    font: 12px bold;
+}
+
+QComboBox QAbstractItemView{
+    background: white;
+    border: 1px solid darkgray;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px;
+    selection-background-color: lightgray;
+    color: black;
+}

@@ -4,9 +4,7 @@
 import time
 
 from PyQt5.QtWidgets import QFileDialog
-column_names = ["Time", "Type", "Value", "Units", "Type2", "Value2", "Units2",
-                "MetaID", "Status", "I_Range",
-                "MetaID2", "Status2", "I_Range2,"]
+column_names = ["Time", "Channel#"]
 separator = ","
 current_range = {
     0x0: "100nA",
@@ -44,7 +42,8 @@ measurement_status = {
 }
 measurement_types = {
     "da": "V cell",
-    "ba": "WE current"
+    "ba": "WE current",
+    "eb": "Timestamp"
 }
 measurement_id_types ={
     1: "Status",
@@ -120,19 +119,20 @@ class Package:
     def value(self):
         for var in self.variables:
             if var.type == "ba":
-                return var.value * si_factor[var.value_prefix];
+                return var.value * si_factor[var.value_prefix]
         return 0
-    def __init__(self):
+    def __init__(self, channel):
         self.variables = []
+        self.channel = channel
         self.time = time.time()
     def __str__(self):
-        result = ""
+        result = f"Channel: {self.channel}"
         for variable in self.variables:
             result = result + str(variable) + "; "
         return result
 
     def to_csv(self):
-        csv = f"{self.time}{separator}"
+        csv = f"{self.time}{separator}{self.channel}{separator}"
         for variable in self.variables:
             csv = csv +variable.to_csv()
         return  csv
@@ -142,6 +142,10 @@ class Interpreter:
     MAX_READINGS = 100000
     def __init__(self):
         self.readings = []
+        self.chapter_n = 0
+        self.csv_line_n = 0
+        self.start_new_chapter()
+
     def csv_table_headers(self):
         return separator.join(column_names) + "\n"
 
@@ -149,7 +153,7 @@ class Interpreter:
         file_name = QFileDialog.getSaveFileName(None, "Save readings to ...", "/", "*.csv")
         if file_name[0] != "":
             try:
-                with open(file_name[0], "w+") as f:
+                with open(file_name[0] , "w+") as f:
                     f.write(self.csv_table_headers())
                     for reading in self.readings:
                         f.write(reading.to_csv())
@@ -157,21 +161,50 @@ class Interpreter:
             except Exception as ex:
                 print(ex)
 
+    def start_new_chapter(self):
+        self.chapter_n += 1
+        self.csv_line_n = 0
+        localtime = time.localtime()
+        self.csv_timestamp = f"{localtime.tm_year}-{localtime.tm_mon}-{localtime.tm_mday} {localtime.tm_hour}-{localtime.tm_min}-{localtime.tm_sec}"
+        try:
+            with open(f"{self.csv_timestamp}_{self.chapter_n}.csv", "w") as f:
+                f.write(self.csv_table_headers())
+        except Exception as ex:
+            print(ex)
+
+    def save_temp(self, pkg: Package, max_lines_in_csv):
+        try:
+            with open(f"{self.csv_timestamp}_{self.chapter_n}.csv", "a") as f:
+                f.write(pkg.to_csv())
+                f.write("\n")
+                self.csv_line_n +=1
+                if self.csv_line_n >= max_lines_in_csv:
+                    self.start_new_chapter()
+
+        except Exception as ex:
+            print(ex)
+
     def add_reading(self, reading: Package):
         self.readings.append(reading)
         if len(self.readings)>=Interpreter.MAX_READINGS:
             self.readings.pop()
 
-    def interpret(self, response: str):
+    def interpret(self, response: str, channel):
         package = None
         if (response[0] == 'P') and (response[-1] == "\n"):
             #print(response)
-            package = Package()
+            package = Package(channel)
             # valid response
             variables = response[1:-1].split(";")
             for var in variables:
                 variable = Varialble()
                 variable.type = var[:2]
+                if variable.type == "eb":
+                    try:
+                        variable.value = int(var[2:-1], 16) - 2 ** 27
+                        variable.value_prefix = var[-1]
+                    except Exception as ex:
+                        print(ex)
                 if variable.type == "da":  # Set control value for cell potential
                     try:
                         variable.value = int(var[2:-1], 16) - 2 ** 27
