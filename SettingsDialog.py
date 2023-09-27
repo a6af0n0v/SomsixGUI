@@ -1,4 +1,3 @@
-from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSpinBox, QHBoxLayout, QFormLayout, QPushButton, QLineEdit, QComboBox
 import json
 from MethodScriptSelector import MethodScriptSelector
@@ -14,15 +13,17 @@ class SettingsDialog(QDialog):
     def on_ok_clicked(self):
         self.settings["name"] = self.le_name.text()
         self.settings["methodscript1_file"] = self.fs_methodscript1.text
-        self.settings["methodscript2_file"] = self.fs_methodscript1.text
+        self.settings["methodscript2_file"] = self.fs_methodscript2.text
         self.settings["methodscript1_enabled"] = self.fs_methodscript1.isEnabled
         self.settings["methodscript2_enabled"] = self.fs_methodscript2.isEnabled
-        self.settings["output_raw_current"] = self.cb_output_raw_current.currentText()
         self.settings["number_of_points_to_average"] = self.sb_number_of_points_to_average.value()
         self.settings["save_csv_while_measuring"] = self.cb_save_csv_while_measuring.currentText()
         self.settings["max_points_in_chapter"] = self.sb_n_points_in_chapter.value()
         self.settings["csv_file_name"] = self.le_csv_file_name.text()
-        self.settings["calibration"] = self.le_calibration_function.text()
+        self.settings["calibration1"] = self.le_calibration_function1.text()
+        self.settings["units1"] = self.le_units1.text()
+        self.settings["calibration2"] = self.le_calibration_function2.text()
+        self.settings["units2"] = self.le_units2.text()
         self.settings["polling_interval"] = self.sb_polling_interval.value()
         self.settings["max_points_to_keep_in_memory"] = self.sb_n_points_in_memory.value()
         self.save()
@@ -56,14 +57,21 @@ class SettingsDialog(QDialog):
         self.sb_number_of_points_to_average.setValue(self.settings["number_of_points_to_average"])
         layout.addRow("Points to average", self.sb_number_of_points_to_average)
 
-        self.cb_output_raw_current = QComboBox()
-        self.cb_output_raw_current.addItems(["Current", "Concentration"])
-        layout.addRow("Value to plot", self.cb_output_raw_current)
-        self.cb_output_raw_current.setEnabled(False)
+        self.le_calibration_function1 = QLineEdit()
+        #self.le_calibration_function.setEnabled(False)
+        self.le_calibration_function1.setText(self.settings["calibration1"])
+        layout.addRow("Calibration function1", self.le_calibration_function1)
+        self.le_units1 = QLineEdit()
+        self.le_units1.setText(self.settings["units1"])
+        layout.addRow("Channel1 units", self.le_units1)
 
-        self.le_calibration_function = QLineEdit()
-        self.le_calibration_function.setEnabled(False)
-        layout.addRow("Calibration function", self.le_calibration_function)
+        self.le_calibration_function2 = QLineEdit()
+        self.le_calibration_function2.setText(self.settings["calibration2"])
+        layout.addRow("Calibration function2", self.le_calibration_function2)
+        self.le_units2 = QLineEdit()
+
+        self.le_units2.setText(self.settings["units2"])
+        layout.addRow("Channel2 units", self.le_units2)
 
         self.cb_save_csv_while_measuring = QComboBox()
         self.cb_save_csv_while_measuring.addItems(["Yes", "No"])

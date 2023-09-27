@@ -19,7 +19,7 @@ class ReceipeSelector(QPushButton):
             print(ex)
         self._full_receipe_name = path
         self.setText(self.receipe["name"])
-        print(self._receipe)
+        #print(self._receipe)
         self.methodscript1 = self.load_method_script_from_file(self._receipe["methodscript1_file"])
         self.methodscript2 = self.load_method_script_from_file(self._receipe["methodscript2_file"])
         self.on_receipe_changed.emit()

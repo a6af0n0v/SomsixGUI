@@ -27,17 +27,17 @@ class ChartWidget(QWidget):
         if is_first_point:
             MainWidget.start_time = time.time()
         time_elapsed = time.time() - MainWidget.start_time
-        value_uA = value * 1E6
+        #value_uA = value * 1E6
         if channel==0:
-            self.line.append(time_elapsed, value_uA)
+            self.line.append(time_elapsed, value)
         elif channel==1:
-            self.line2.append(time_elapsed, value_uA)
+            self.line2.append(time_elapsed, value)
         b_range_changed = False
-        if value_uA < self.min_value:
-            self.min_value = value_uA
+        if value < self.min_value:
+            self.min_value = value
             b_range_changed = True
-        if value_uA > self.max_value:
-            self.max_value = value_uA
+        if value > self.max_value:
+            self.max_value = value
             b_range_changed = True
         if b_range_changed:
             self.chart.axisY().setRange(self.min_value * 1.1, self.max_value * 1.1)
@@ -129,7 +129,7 @@ class ChartWidget(QWidget):
         self.chart.axisY().setTitleBrush(QBrush(QColor(Styles.chart_styles["axis_title_color"])))
         self.chart.axisX().setTitleText("t / sec")
         self.chart.axisY().setTitleFont(axis_title_font)
-        self.chart.axisY().setTitleText("I / uA")
+        #self.chart.axisY().setTitleText("I / uA")
         self.chart.setTitle("Default")
         self.chart.resize(300, 300)
 
@@ -144,7 +144,6 @@ class ChartWidget(QWidget):
 
 class MainWidget(QWidget):
     start_time = time.time()
-
     def timeout(self):
         if self.cbb_port_selector.palmsens_handle != None:
             while self.cbb_port_selector.palmsens_handle.in_waiting > 0:
@@ -163,8 +162,16 @@ class MainWidget(QWidget):
                     if len(self.WE_currents) != 0:
                         avg = sum(self.WE_currents[-self.cbb_receipe_selector.receipe["number_of_points_to_average"]:]) / len(self.WE_currents[-self.cbb_receipe_selector.receipe["number_of_points_to_average"]:])
                         print(f"Method script for channel {self.channel} finished, average value {avg}, number of points: {self.cbb_receipe_selector.receipe['number_of_points_to_average']}")
-
-                        self.cw_charts.append(avg, self.channel)
+                        cal_func =self.cbb_receipe_selector.receipe[f"calibration{self.channel+1}"]
+                        if cal_func !="":
+                            try:
+                                y = eval(cal_func, {"x": avg})
+                                #print(f"converted value {y}")
+                                self.cw_charts.append(y, self.channel)
+                            except Exception as ex:
+                                print(f"Error while calibration {ex}")
+                        else:
+                            self.cw_charts.append(avg, self.channel)
                         self.channel +=1
                         if self.channel > 1 or self.cbb_receipe_selector.receipe["methodscript2_enabled"]==False:
                             self.timer.stop()
@@ -247,6 +254,8 @@ class MainWidget(QWidget):
     def receipe_changed(self):
         self.cw_charts.chart.setTitle(self.cbb_receipe_selector.receipe["name"])
         self.interpreter.MAX_READINGS = self.cbb_receipe_selector.receipe["max_points_to_keep_in_memory"]
+        self.cw_charts.line.setName(f"ch0, {self.cbb_receipe_selector.receipe['units1']}")
+        self.cw_charts.line2.setName(f"ch1, {self.cbb_receipe_selector.receipe['units2']}")
 
     def __init__(self, parent):
         super().__init__(parent)
