@@ -1,8 +1,8 @@
 {
-    "name": "1.6V 2ch 60s scsv 10p nA",
-    "methodscript1_file": "scripts/-1.6V_channel0.methodscript",
+    "name": "1.2V 2ch 60s scsv 10p nA",
+    "methodscript1_file": "scripts/-1.2V_channel0.methodscript",
     "methodscript1_enabled": true,
-    "methodscript2_file": "scripts/-1.6V_channel1.methodscript",
+    "methodscript2_file": "scripts/-1.2V_channel1.methodscript",
     "methodscript2_enabled": true,
     "polling_interval": 60,
     "number_of_points_to_average": 10,
