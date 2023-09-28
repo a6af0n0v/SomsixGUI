@@ -218,6 +218,7 @@ class MainWidget(QWidget):
             self.cbb_receipe_selector.setObjectName("disabled")
             self.pb_start.setText("Stop")
             self.main_timer.start(self.cbb_receipe_selector.receipe["polling_interval"]*1000)
+            self.on_timeout()
             self._status = STATUS.RUNNING
         self.setStyleSheet(Styles.style)
 

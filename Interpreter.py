@@ -229,5 +229,5 @@ class Interpreter:
                     except Exception as ex:
                         print(f"Conversion failed {var}")
                 package.variables.append(variable)
-                self.add_reading(package)
+            self.add_reading(package)
         return package
