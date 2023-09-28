@@ -2,7 +2,7 @@ e
 var c
 var p
 var t
-set_pgstat_chan 0
+set_pgstat_chan 1
 set_pgstat_mode 0
 set_pgstat_chan 0
 set_pgstat_mode 3
